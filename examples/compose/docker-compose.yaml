@@ -1,0 +1,53 @@
+version: '3'
+services:
+  nginx:
+    build:
+      context: .
+      dockerfile: ./docker/nginx.Dockerfile
+    ports:
+      - "80:80" # without xhprof
+      - "8000:8000" # with xhprof
+    depends_on:
+      - php
+      - xhprof
+    restart: always
+
+  php:
+    build:
+      context: .
+      dockerfile: ./docker/php.Dockerfile
+    volumes:
+      - ./app:/app
+    environment:
+      MYSQL_DATABASE: "demodb"
+      MYSQL_ROOT_PASSWORD: "123456"
+    links:
+      - mysql
+    restart: always
+
+  xhprof:
+    build:
+      context: .
+      dockerfile: ./docker/xhprof.Dockerfile
+    volumes:
+      - ./app:/app
+    environment:
+      MYSQL_DATABASE: "demodb"
+      MYSQL_ROOT_PASSWORD: "123456"
+    ports:
+      - "8080:8080" # xhgui
+    links:
+      - mysql
+    restart: always
+
+  mysql:
+    image: mysql:5.7.26
+    volumes:
+      - dbdata:/var/lib/mysql
+    environment:
+      MYSQL_DATABASE: "demodb"
+      MYSQL_ROOT_PASSWORD: "123456"
+    restart: always
+
+volumes:
+  dbdata:
